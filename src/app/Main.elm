@@ -61,13 +61,19 @@ init flagsValue =
                     flags.roomId
             , Cmd.none
             )
-        Err _ ->
-            ( Model (Flags.default |> .documentTitle)
-                    (Flags.default |> .endpoints)
-                    []
-                    (Flags.default |> .roomId)
-            , Cmd.none
-            )
+        Err err ->
+            let
+                error = err
+                         |> Json.Decode.errorToString
+                         |> Json.Encode.string
+            in
+            
+                ( Model (Flags.default |> .documentTitle)
+                        (Flags.default |> .endpoints)
+                        []
+                        (Flags.default |> .roomId)
+                , log error
+                )
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
@@ -91,13 +97,13 @@ update msg model =
             case (Json.Decode.decodeValue socketMessageDecoder json) of
                 Ok newMsg ->
                     update newMsg model
-                        |> Tuple.mapSecond (\_ -> log json)
                 Err err ->
                     let
-                        _ = Debug.log "Decode Error: " err
+                        error = err
+                                |> Json.Decode.errorToString
+                                |> Json.Encode.string
                     in
-                    
-                        (model, log json)
+                        (model, log error)
         
         ResetAllVotes ->
             ( { model | players = Game.emptyVotes model.players }
