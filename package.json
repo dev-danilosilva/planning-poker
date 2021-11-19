@@ -1,0 +1,15 @@
+{
+  "name": "planning-poker-web-app",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "scripts": {
+    "build": "yarn build-elm && yarn gather-files",
+    "build-elm": "elm make src/app/Main.elm --output=dist/js/app.js",
+    "gather-files": "cp src/js/*.js ./dist/js && cp src/css/*.css ./dist/css && cp src/index.html ./dist",
+    "debug": "yarn build-elm --debug && yarn gather-files"
+  },
+  "dependencies": {
+    "elm-test": "^0.19.1-revision7"
+  }
+}
