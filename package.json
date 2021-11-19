@@ -9,7 +9,7 @@
     "gather-files": "cp src/js/*.js ./dist/js && cp src/css/*.css ./dist/css && cp src/index.html ./dist",
     "debug": "yarn build-elm --debug && yarn gather-files"
   },
-  "dependencies": {
+  "devDependencies": {
     "elm-test": "^0.19.1-revision7"
   }
 }
