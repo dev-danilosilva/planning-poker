@@ -8,16 +8,6 @@ function main(params) {
     return app;
 }
 
-function makeid(length) {
-    let result           = '';
-    const characters       = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.-#$%&!';
-    const charactersLength = characters.length;
-    for ( var i = 0; i < length; i++ ) {
-      result += characters.charAt(Math.floor(Math.random() * charactersLength));
-   }
-   return result;
-}
-
 const app = 
         main({
                 entry_node : document.querySelector('#app'),
@@ -32,6 +22,39 @@ const app =
             });
 
 
-setInterval(() => {
-    app.ports.extraConfig.send({message : makeid(10), status: "200"});
+setTimeout(() => {
+    app.ports.getSocketMessage.send({ event : "addPlayer", payload : {nickname : "tiago.hora"}})
+}, 5000);
+
+setTimeout(() => {
+    app.ports.getSocketMessage.send({ event : "addPlayer", payload : {nickname : "danilo.silva"}})
+}, 8000);
+
+setTimeout(() => {
+    app.ports.getSocketMessage.send({ event : "removePlayer", payload : {nickname : "tiago.hora"}})
 }, 10000);
+
+// Event Contract
+// 
+// 
+// ADD PLAYER
+//
+//  { event : "addPlayer"
+//  , payload : {nickname : "danilo.silva"}}
+//
+// 
+// REMOVE PLAYER
+//
+//  { event : "removePlayer"
+//  , payload : {nickname : "danilo.silva"}}
+//
+// 
+// UPDATE PLAYER VOTE
+// 
+// { event : "updatePlayerVote"
+// , payload : { nickname : "danilo.silva"
+//             , vote: { representation: "M"
+//                     , value : 3.0
+//                     }
+//             }
+// }

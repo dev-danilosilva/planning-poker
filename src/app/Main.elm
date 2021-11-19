@@ -24,7 +24,16 @@ type alias Model =
 type Msg
     = AddPlayer String
     | RemovePlayer String
-    | InvalidOperation String
+    | GotSocketMessage Json.Decode.Value
+    | InvalidSocketMessage
+
+type SocketEventType
+    = AddPlayerEvent
+    | RemovePlayerEvent
+    | InvalidSocketEvent
+
+port getSocketMessage : (Json.Decode.Value -> msg) -> Sub msg
+
 
 main : Program Json.Decode.Value Model Msg
 main =
@@ -41,9 +50,7 @@ init flagsValue =
         Ok flags ->
             ( Model flags.documentTitle
                     flags.endpoints
-                    (Game.updatePlayerVoteStatus "danilo.silva " Game.Null  [ Game.newPlayer "danilo.silva"
-                                                                           , Game.newPlayer "fulano.ciclano"
-                                                                           , Game.newPlayer "kiko.dochaves"])
+                    []
                     flags.roomId
             , Cmd.none
             )
@@ -67,34 +74,21 @@ update msg model =
             ( { model | players = Game.removePlayer nickname model.players}
             , Cmd.none
             )
+        
+        GotSocketMessage json ->
+            case (Json.Decode.decodeValue socketMessageDecoder json) of
+                Ok newMsg ->
+                    update newMsg model
+                Err _ ->
+                    (model, Cmd.none)
 
-        InvalidOperation errorMessage->
-            let
-                _ = Debug.log "Application Log: " ("Invalid Operation - " ++ errorMessage)
-            in
-                (model, Cmd.none)
-
+        InvalidSocketMessage->
+            (model, Cmd.none)
 -- port sendMessage : String -> Cmd msg
-
-port extraConfig : (Json.Decode.Value -> msg) -> Sub msg
-
-type alias OutMsg =
-    { message : String
-    , status : String}
 
 subscriptions : Model -> Sub Msg
 subscriptions _ =
-    let
-        msgDecoder = Json.Decode.map2 OutMsg
-                                      (Json.Decode.field "message" Json.Decode.string)
-                                      (Json.Decode.field "status"  Json.Decode.string)
-        decodeValue message =
-            case Json.Decode.decodeValue msgDecoder message of
-                Ok m -> AddPlayer m.message
-                Err _ -> InvalidOperation "Error Parsing Socket Message"
-
-    in
-        extraConfig decodeValue
+    getSocketMessage GotSocketMessage
     
 
 view : Model -> Browser.Document Msg
@@ -126,3 +120,33 @@ playerView : Game.Player -> Html Msg
 playerView player =
     div [class "player-view"]
         [p [] [text player.nickname]]
+
+-- Decoders and Decoder Helpers
+socketMessageDecoder : Json.Decode.Decoder Msg
+socketMessageDecoder =
+    Json.Decode.field "event" Json.Decode.string
+        |> Json.Decode.andThen payloadDecoder
+
+payloadDecoder : String -> Json.Decode.Decoder Msg
+payloadDecoder eventType =
+    case parseEventType eventType of
+        AddPlayerEvent ->
+            Json.Decode.map
+                AddPlayer
+                (Json.Decode.at ["payload", "nickname"] Json.Decode.string)
+        RemovePlayerEvent ->
+            Json.Decode.map
+                RemovePlayer
+                (Json.Decode.at ["payload", "nickname"] Json.Decode.string)
+        InvalidSocketEvent ->
+            Json.Decode.succeed InvalidSocketMessage
+
+parseEventType : String -> SocketEventType
+parseEventType eventType =
+    case eventType of
+        "addPlayer" ->
+            AddPlayerEvent
+        "removePlayer" ->
+            RemovePlayerEvent
+        _ ->
+            InvalidSocketEvent
