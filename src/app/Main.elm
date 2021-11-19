@@ -41,6 +41,9 @@ port getSocketMessage : (Json.Decode.Value -> msg) -> Sub msg
 
 port log : Json.Encode.Value -> Cmd msg
 
+logString : String -> Cmd msg
+logString = log << Json.Encode.string
+
 main : Program Json.Decode.Value Model Msg
 main =
     Browser.document
@@ -58,7 +61,7 @@ init flagsValue =
                     flags.endpoints
                     []
                     flags.roomId
-            , Cmd.none
+            , log flagsValue
             )
         Err err ->
             let
@@ -79,7 +82,7 @@ update msg model =
     case msg of
         AddPlayer nickname ->
             ( { model | players = Game.addNewPlayer (String.trim nickname) model.players }
-            , Cmd.none
+            , logString <| "ADD -> " ++ nickname
             )
         
         RemovePlayer nickname ->
@@ -98,11 +101,9 @@ update msg model =
                     update newMsg model
                 Err err ->
                     let
-                        error = err
-                                |> Json.Decode.errorToString
-                                |> Json.Encode.string
+                        error = Json.Decode.errorToString err
                     in
-                        (model, log error)
+                        (model, logString error)
         
         ResetAllVotes ->
             ( { model | players = Game.emptyVotes model.players }
