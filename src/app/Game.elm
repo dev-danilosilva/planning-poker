@@ -8,6 +8,7 @@ module Game exposing ( Player
                      , removePlayer
                      , updatePlayerVoteStatus
                      , validate
+                     , voteStatusToString
                      )
 
 type alias Player =
@@ -188,3 +189,12 @@ removeNullAndEmptyVotes playerList =
     in
         Ok <| List.filter isNotNullOrEmpty playerList
 
+
+voteStatusToString : VoteStatus -> String
+voteStatusToString voteStatus =
+    case voteStatus of
+        EmptyVote -> "Not voted yet"
+
+        BlankVote -> "?"
+
+        ValidVote vote -> vote.representation

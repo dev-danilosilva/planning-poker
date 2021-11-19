@@ -32,8 +32,39 @@ setTimeout(() => {
 }, 8000);
 
 setTimeout(() => {
+    app.ports.getSocketMessage.send(
+        { event : "updatePlayerVote"
+        , payload : { nickname : "cirilo.joao"
+                    , vote: { representation: "3"
+                            , value : 3.0
+                            }
+                    }
+        })
+}, 12000);
+
+setTimeout(() => {
+    app.ports.getSocketMessage.send(
+        { event : "updatePlayerVote"
+        , payload : { nickname : "cirilo.joao"
+                    , vote: "blank"
+                    }
+        })
+}, 14000);
+
+setTimeout(() => {
+    app.ports.getSocketMessage.send(
+        { event : "updatePlayerVote"
+        , payload : { nickname : "maria.joaquina"
+                    , vote: { representation: "3"
+                            , value : 3.0
+                            }
+                    }
+        })
+}, 16000);
+
+setTimeout(() => {
     app.ports.getSocketMessage.send({ event : "removePlayer", payload : {nickname : "cirilo.joao"}})
-}, 10000);
+}, 18000);
 
 // Event Contract
 // 

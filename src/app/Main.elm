@@ -145,8 +145,12 @@ playerListView players =
 
 playerView : Game.Player -> Html Msg
 playerView player =
-    div [class "player-view"]
-        [p [] [text player.nickname]]
+    div [ class "player-view"]
+        [ p []
+            [ text player.nickname
+            , text <| "  ->  " ++ Game.voteStatusToString player.voteStatus
+            ]
+        ]
 
 -- Decoders and Decoder Helpers
 
