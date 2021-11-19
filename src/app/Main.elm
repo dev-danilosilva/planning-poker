@@ -14,7 +14,6 @@ import Json.Decode
 import Flags
 import Game
 import Json.Encode
-import Util.String
 
 type alias Model =
     { documentTitle  : String
@@ -203,7 +202,7 @@ emptyVoteDecoder =
 
 blankVoteDecoder : String -> Json.Decode.Decoder Game.VoteStatus
 blankVoteDecoder decodedString =
-    if Util.String.cleanString decodedString == "blank" then
+    if cleanString decodedString == "blank" then
         Json.Decode.succeed Game.BlankVote
     else
         Json.Decode.fail "The string given is not equals to `blank`"
@@ -232,3 +231,8 @@ parseEventType eventType =
                 UpdatePlayerVoteEvent
             _ ->
                 InvalidSocketEvent
+
+cleanString : String -> String
+cleanString str = str
+                    |> String.trim
+                    |> String.toLower
