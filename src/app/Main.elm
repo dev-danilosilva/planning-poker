@@ -29,7 +29,7 @@ type Msg
     | UpdatePlayerVote String Game.VoteStatus
     | ResetAllVotes
     | GotSocketMessage Json.Decode.Value
-    | InvalidSocketMessage
+    | InvalidSocketMessage Json.Decode.Value
 
 type SocketEventType
     = AddPlayerEvent
@@ -104,8 +104,8 @@ update msg model =
             , Cmd.none
             )
         
-        InvalidSocketMessage->
-            (model, Cmd.none)
+        InvalidSocketMessage json ->
+            (model, log json)
 
 subscriptions : Model -> Sub Msg
 subscriptions _ =
@@ -172,7 +172,11 @@ payloadDecoder eventType =
             Json.Decode.succeed ResetAllVotes
 
         InvalidSocketEvent ->
-            Json.Decode.succeed InvalidSocketMessage
+            Json.Decode.value |> Json.Decode.andThen invalidSocketEventDecoder
+
+invalidSocketEventDecoder : Json.Decode.Value -> Json.Decode.Decoder Msg
+invalidSocketEventDecoder json =
+    Json.Decode.succeed <| InvalidSocketMessage json
 
 voteStatusDecoder : Json.Decode.Decoder Game.VoteStatus
 voteStatusDecoder =
