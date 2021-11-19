@@ -21,17 +21,18 @@ const app =
                 }
             });
 
+app.ports.log.subscribe((msg) => console.log(msg))
 
 setTimeout(() => {
-    app.ports.getSocketMessage.send({ event : "addPlayer", payload : {nickname : "tiago.hora"}})
+    app.ports.getSocketMessage.send({ event : "addPlayer", payload : {nickname : "maria.joaquina"}})
 }, 5000);
 
 setTimeout(() => {
-    app.ports.getSocketMessage.send({ event : "addPlayer", payload : {nickname : "danilo.silva"}})
+    app.ports.getSocketMessage.send({ event : "addPlayer", payload : {nickname : "cirilo.joao"}})
 }, 8000);
 
 setTimeout(() => {
-    app.ports.getSocketMessage.send({ event : "removePlayer", payload : {nickname : "tiago.hora"}})
+    app.ports.getSocketMessage.send({ event : "removePlayer", payload : {nickname : "cirilo.joao"}})
 }, 10000);
 
 // Event Contract

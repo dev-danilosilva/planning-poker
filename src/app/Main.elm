@@ -40,7 +40,7 @@ type SocketEventType
 
 port getSocketMessage : (Json.Decode.Value -> msg) -> Sub msg
 
-port sendMessage : Json.Encode.Value -> Cmd msg
+port log : Json.Encode.Value -> Cmd msg
 
 main : Program Json.Decode.Value Model Msg
 main =
@@ -91,8 +91,13 @@ update msg model =
             case (Json.Decode.decodeValue socketMessageDecoder json) of
                 Ok newMsg ->
                     update newMsg model
-                Err _ ->
-                    (model, Cmd.none)
+                        |> Tuple.mapSecond (\_ -> log json)
+                Err err ->
+                    let
+                        _ = Debug.log "Decode Error: " err
+                    in
+                    
+                        (model, log json)
         
         ResetAllVotes ->
             ( { model | players = Game.emptyVotes model.players }
@@ -204,7 +209,7 @@ voteDecoder =
 
 parseEventType : String -> SocketEventType
 parseEventType eventType =
-    case Util.String.cleanString eventType of
+    case String.trim eventType of
             "addPlayer" ->
                 AddPlayerEvent
             "removePlayer" ->
