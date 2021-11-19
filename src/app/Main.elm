@@ -13,6 +13,8 @@ import Html.Attributes exposing ( class
 import Json.Decode
 import Flags
 import Game
+import Json.Encode
+import Util.String
 
 type alias Model =
     { documentTitle  : String
@@ -24,16 +26,21 @@ type alias Model =
 type Msg
     = AddPlayer String
     | RemovePlayer String
+    | UpdatePlayerVote String Game.VoteStatus
+    | ResetAllVotes
     | GotSocketMessage Json.Decode.Value
     | InvalidSocketMessage
 
 type SocketEventType
     = AddPlayerEvent
     | RemovePlayerEvent
+    | UpdatePlayerVoteEvent
+    | ResetAllVotesEvent
     | InvalidSocketEvent
 
 port getSocketMessage : (Json.Decode.Value -> msg) -> Sub msg
 
+port sendMessage : Json.Encode.Value -> Cmd msg
 
 main : Program Json.Decode.Value Model Msg
 main =
@@ -66,12 +73,17 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         AddPlayer nickname ->
-            ( { model | players = Game.addNewPlayer nickname model.players }
+            ( { model | players = Game.addNewPlayer (String.trim nickname) model.players }
             , Cmd.none
             )
         
         RemovePlayer nickname ->
-            ( { model | players = Game.removePlayer nickname model.players}
+            ( { model | players = Game.removePlayer (String.trim nickname) model.players}
+            , Cmd.none
+            )
+        
+        UpdatePlayerVote nickname newVoteStatus ->
+            ( { model | players = Game.updatePlayerVoteStatus nickname newVoteStatus model.players}
             , Cmd.none
             )
         
@@ -81,10 +93,14 @@ update msg model =
                     update newMsg model
                 Err _ ->
                     (model, Cmd.none)
-
+        
+        ResetAllVotes ->
+            ( { model | players = Game.emptyVotes model.players }
+            , Cmd.none
+            )
+        
         InvalidSocketMessage->
             (model, Cmd.none)
--- port sendMessage : String -> Cmd msg
 
 subscriptions : Model -> Sub Msg
 subscriptions _ =
@@ -122,6 +138,7 @@ playerView player =
         [p [] [text player.nickname]]
 
 -- Decoders and Decoder Helpers
+
 socketMessageDecoder : Json.Decode.Decoder Msg
 socketMessageDecoder =
     Json.Decode.field "event" Json.Decode.string
@@ -134,19 +151,65 @@ payloadDecoder eventType =
             Json.Decode.map
                 AddPlayer
                 (Json.Decode.at ["payload", "nickname"] Json.Decode.string)
+        
         RemovePlayerEvent ->
             Json.Decode.map
                 RemovePlayer
                 (Json.Decode.at ["payload", "nickname"] Json.Decode.string)
+
+        UpdatePlayerVoteEvent ->
+            Json.Decode.map2
+                UpdatePlayerVote
+                (Json.Decode.at ["payload", "nickname"] Json.Decode.string)
+                (Json.Decode.at ["payload", "vote"] voteStatusDecoder)
+
+        ResetAllVotesEvent ->
+            Json.Decode.succeed ResetAllVotes
+
         InvalidSocketEvent ->
             Json.Decode.succeed InvalidSocketMessage
 
+voteStatusDecoder : Json.Decode.Decoder Game.VoteStatus
+voteStatusDecoder =
+    Json.Decode.oneOf
+        [ validVoteDecoder
+        , emptyVoteDecoder
+        , Json.Decode.string |> Json.Decode.andThen blankVoteDecoder
+        , Json.Decode.fail "Invalid Vote Status. The vote you sent does not follow the Vote Status contract."
+        ]
+
+emptyVoteDecoder : Json.Decode.Decoder Game.VoteStatus
+emptyVoteDecoder =
+    Json.Decode.null Game.EmptyVote
+
+blankVoteDecoder : String -> Json.Decode.Decoder Game.VoteStatus
+blankVoteDecoder decodedString =
+    if Util.String.cleanString decodedString == "blank" then
+        Json.Decode.succeed Game.BlankVote
+    else
+        Json.Decode.fail "The string given is not equals to `blank`"
+
+validVoteDecoder : Json.Decode.Decoder Game.VoteStatus
+validVoteDecoder =
+    Json.Decode.map
+        Game.ValidVote
+        voteDecoder
+
+voteDecoder : Json.Decode.Decoder Game.Vote
+voteDecoder =
+    Json.Decode.map2
+        Game.Vote
+        (Json.Decode.field "value" Json.Decode.float)
+        (Json.Decode.field "representation" Json.Decode.string)        
+
 parseEventType : String -> SocketEventType
 parseEventType eventType =
-    case eventType of
-        "addPlayer" ->
-            AddPlayerEvent
-        "removePlayer" ->
-            RemovePlayerEvent
-        _ ->
-            InvalidSocketEvent
+    case Util.String.cleanString eventType of
+            "addPlayer" ->
+                AddPlayerEvent
+            "removePlayer" ->
+                RemovePlayerEvent
+            "updatePlayerVote" ->
+                UpdatePlayerVoteEvent
+            _ ->
+                InvalidSocketEvent

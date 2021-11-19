@@ -1,4 +1,5 @@
 module Game exposing ( Player
+                     , Vote
                      , VoteStatus(..)
                      , addNewPlayer
                      , defaultScale
@@ -20,9 +21,9 @@ type alias Vote =
     }
 
 type VoteStatus
-    = Empty
-    | Null
-    | Voted Vote
+    = EmptyVote
+    | BlankVote
+    | ValidVote Vote
 
 type alias Validation = List Player -> Result (List ValidationError) (List Player)
 type alias VoteScale = List Vote
@@ -42,7 +43,7 @@ stringfyErrors error =
 newPlayer : String -> Player
 newPlayer nickname =
     { nickname = nickname
-    , voteStatus = Empty
+    , voteStatus = EmptyVote
     }
 
 addNewPlayer : String -> List Player -> List Player
@@ -65,7 +66,7 @@ updatePlayerVoteStatus nickname newVote =
     let
         updateVoteStatus : Player -> Player
         updateVoteStatus player =
-            if player.nickname == String.trim nickname then
+            if player.nickname == nickname then
                 { player | voteStatus = newVote }
             else
                 player
@@ -76,7 +77,7 @@ updatePlayerVoteStatus nickname newVote =
 emptyVotes : List Player -> List Player
 emptyVotes =
     List.map (\player ->
-                { player | voteStatus = Empty })
+                { player | voteStatus = EmptyVote })
 
 defaultScale : VoteScale
 defaultScale =
@@ -145,7 +146,7 @@ everyoneShouldVote players =
     let
         validationSuceeded = 
             List.foldl
-                (\player result -> (player.voteStatus == Empty)
+                (\player result -> (player.voteStatus == EmptyVote)
                                         |> not
                                         |> (&&) result)
                 True 
@@ -165,7 +166,7 @@ allVotesAreWithinTheSameScale scale players=
         voteInScale : VoteStatus -> Bool
         voteInScale voteStatus =
                     case voteStatus of
-                        Voted x ->
+                        ValidVote x ->
                             List.member x.value scaleValues
                         _  -> False
     in
@@ -182,7 +183,7 @@ removeNullAndEmptyVotes : Validation
 removeNullAndEmptyVotes playerList =
     let
         isNotNullOrEmpty player = case player.voteStatus of
-                                    Voted _ -> True
+                                    ValidVote _ -> True
                                     _       -> False
     in
         Ok <| List.filter isNotNullOrEmpty playerList

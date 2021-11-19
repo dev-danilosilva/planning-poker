@@ -58,3 +58,5 @@ setTimeout(() => {
 //                     }
 //             }
 // }
+//
+//Obs. The payload.vote must have a null value for empty votes and a string "blank" for blank votes
