@@ -12,7 +12,7 @@ const app =
         main({
                 entry_node : document.querySelector('#app'),
                 config : {
-                    document_title : "Collections Team",
+                    document_title : "Scrum Tools",
                     endpoints: {
                         api : "http://api.com/",
                         websocket : "ws:///websocket.com"
