@@ -13,69 +13,18 @@ const app =
             entry_node : document.querySelector('#app'),
             config : {
                 document_title : "Scrum Tools",
-                nickname: "danilos.silva",
+                nickname: "$nickname",
                 endpoints: {
                     api : "http://api.com/",
                     websocket : "ws:///websocket.com"
                 },
-                room_id : "#123"
+                room_id : "$room-id"
             }
         });
 
 app.ports.log.subscribe((msg) => console.log(msg))
 
 app.ports.sendVote.subscribe(msg => console.log("New Vote => ", msg))
-
-setTimeout(() => {
-    app.ports.getSocketMessage.send({ event : "connected"})
-}, 3000);
-
-setTimeout(() => {
-    app.ports.getSocketMessage.send({ event : "addPlayer", payload : {nickname : "maria.joaquina"}})
-}, 5000);
-
-setTimeout(() => {
-    app.ports.getSocketMessage.send({ event : "addPlayer", payload : {nickname : "cirilo.joao"}})
-}, 8000);
-
-setTimeout(() => {
-    app.ports.getSocketMessage.send(
-        { event : "updatePlayerVote"
-        , payload : { nickname : "cirilo.joao"
-                    , vote: { representation: "3"
-                            , value : 3.0
-                            }
-                    }
-        })
-}, 12000);
-
-setTimeout(() => {
-    app.ports.getSocketMessage.send(
-        { event : "updatePlayerVote"
-        , payload : { nickname : "cirilo.joao"
-                    , vote: "blank"
-                    }
-        })
-}, 14000);
-
-setTimeout(() => {
-    app.ports.getSocketMessage.send(
-        { event : "updatePlayerVote"
-        , payload : { nickname : "maria.joaquina"
-                    , vote: { representation: "3"
-                            , value : 3.0
-                            }
-                    }
-        })
-}, 16000);
-
-setTimeout(() => {
-    app.ports.getSocketMessage.send({ event : "removePlayer", payload : {nickname : "cirilo.joao"}})
-}, 18000);
-
-setTimeout(() => {
-    app.ports.getSocketMessage.send({ event : "disconnected" })
-}, 20000);
 
 // Event Contract
 // 

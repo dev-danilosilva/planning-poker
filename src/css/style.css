@@ -16,11 +16,13 @@
 }
 
 .online-status {
+    font-size: 30px;
     font-weight: 600;
     color: green;
 }
 
 .offline-status {
+    font-size: 30px;
     font-weight: 600;
     color: red;
 }
