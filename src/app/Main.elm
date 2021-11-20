@@ -23,6 +23,7 @@ type alias Model =
     , players        : List Game.Player
     , roomId         : String
     , online         : Bool
+    , voteVisibility : Bool
     }
 
 type Msg
@@ -34,6 +35,7 @@ type Msg
     | GotSocketMessage Json.Decode.Value
     | InvalidSocketMessage Json.Decode.Value
     | ApplicationIsOnline Bool
+    | ChangeVoteVisibility Bool 
 
 type SocketEventType
     = AddPlayerEvent
@@ -41,8 +43,9 @@ type SocketEventType
     | UpdatePlayerVoteEvent
     | ResetAllVotesEvent
     | InvalidSocketEvent
-    | SocketConnectionOffline
-    | SocketConnectionOnline
+    | SocketConnectionOfflineEvent
+    | SocketConnectionOnlineEvent
+    | ChangeVoteVisibilityEvent
 
 port getSocketMessage : (Json.Decode.Value -> msg) -> Sub msg
 
@@ -75,6 +78,7 @@ init flagsValue =
                         []
                         flags.roomId
                         False
+                        False
                 , logString <| "Me as " ++ player.nickname
                 )
         Err err ->
@@ -89,6 +93,7 @@ init flagsValue =
                         (Game.newPlayer <| .nickname <| Flags.default)
                         []
                         (.roomId <| Flags.default)
+                        False
                         False
                 , log error
                 )
@@ -142,6 +147,11 @@ update msg model =
             , Cmd.none
             )
         
+        ChangeVoteVisibility isVisible ->
+            ( {model | voteVisibility = isVisible}
+            , Cmd.none
+            )
+
         InvalidSocketMessage json ->
             (model, log json)
 
@@ -216,14 +226,19 @@ payloadDecoder eventType =
                 (Json.Decode.at ["payload", "nickname"] Json.Decode.string)
                 (Json.Decode.at ["payload", "vote"] voteStatusDecoder)
         
-        SocketConnectionOnline ->
+        SocketConnectionOnlineEvent ->
             Json.Decode.succeed <| ApplicationIsOnline True
 
-        SocketConnectionOffline ->
+        SocketConnectionOfflineEvent ->
             Json.Decode.succeed <| ApplicationIsOnline False
 
         ResetAllVotesEvent ->
             Json.Decode.succeed ResetAllVotes
+        
+        ChangeVoteVisibilityEvent ->
+            Json.Decode.map
+                ChangeVoteVisibility
+                (Json.Decode.at ["payload", "visibility"] Json.Decode.bool)
 
         InvalidSocketEvent ->
             Json.Decode.value |> Json.Decode.andThen invalidSocketEventDecoder
@@ -274,10 +289,12 @@ parseEventType eventType =
                 RemovePlayerEvent
             "updatePlayerVote" ->
                 UpdatePlayerVoteEvent
+            "changeVoteVisibility" ->
+                ChangeVoteVisibilityEvent
             "connected" ->
-                SocketConnectionOnline
+                SocketConnectionOnlineEvent
             "disconnected" ->
-                SocketConnectionOffline
+                SocketConnectionOfflineEvent
             _ ->
                 InvalidSocketEvent
 
