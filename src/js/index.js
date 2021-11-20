@@ -9,18 +9,18 @@ function main(params) {
 }
 
 const app = 
-        main({
-                entry_node : document.querySelector('#app'),
-                config : {
-                    document_title : "Scrum Tools",
-                    nickname: "danilos.silva",
-                    endpoints: {
-                        api : "http://api.com/",
-                        websocket : "ws:///websocket.com"
-                    },
-                    room_id : "#123"
-                }
-            });
+    main({
+            entry_node : document.querySelector('#app'),
+            config : {
+                document_title : "Scrum Tools",
+                nickname: "danilos.silva",
+                endpoints: {
+                    api : "http://api.com/",
+                    websocket : "ws:///websocket.com"
+                },
+                room_id : "#123"
+            }
+        });
 
 app.ports.log.subscribe((msg) => console.log(msg))
 
@@ -71,6 +71,9 @@ setTimeout(() => {
 
 // Event Contract
 // 
+// WEBSOCKET CONNECTION STATUS
+// 
+// { event : "connected" | "disconnected"}
 // 
 // ADD PLAYER
 //
@@ -84,7 +87,7 @@ setTimeout(() => {
 //  , payload : {nickname : "danilo.silva"}}
 //
 // 
-// UPDATE PLAYER VOTE
+// UPDATE PLAYER VOTE (IN/OUT)
 // 
 // { event : "updatePlayerVote"
 // , payload : { nickname : "danilo.silva"
@@ -95,3 +98,4 @@ setTimeout(() => {
 // }
 //
 //Obs. The payload.vote must have a null value for empty votes and a string "blank" for blank votes
+//

@@ -22,6 +22,7 @@ type alias Model =
     , me             : Game.Player
     , players        : List Game.Player
     , roomId         : String
+    , online         : Bool
     }
 
 type Msg
@@ -32,6 +33,7 @@ type Msg
     | ResetAllVotes
     | GotSocketMessage Json.Decode.Value
     | InvalidSocketMessage Json.Decode.Value
+    | ApplicationIsOnline Bool
 
 type SocketEventType
     = AddPlayerEvent
@@ -39,6 +41,8 @@ type SocketEventType
     | UpdatePlayerVoteEvent
     | ResetAllVotesEvent
     | InvalidSocketEvent
+    | SocketConnectionOffline
+    | SocketConnectionOnline
 
 port getSocketMessage : (Json.Decode.Value -> msg) -> Sub msg
 
@@ -70,6 +74,7 @@ init flagsValue =
                         player
                         []
                         flags.roomId
+                        False
                 , logString <| "Me as " ++ player.nickname
                 )
         Err err ->
@@ -84,6 +89,7 @@ init flagsValue =
                         (Game.newPlayer <| .nickname <| Flags.default)
                         []
                         (.roomId <| Flags.default)
+                        False
                 , log error
                 )
 
@@ -114,6 +120,11 @@ update msg model =
                         error = Json.Decode.errorToString err
                     in
                         (model, logString error)
+        
+        ApplicationIsOnline isOnline ->
+            ( { model | online = isOnline }
+            , Cmd.none
+            )
         
         SendVote voteStatus ->
             let
@@ -198,6 +209,12 @@ payloadDecoder eventType =
                 UpdatePlayerVote
                 (Json.Decode.at ["payload", "nickname"] Json.Decode.string)
                 (Json.Decode.at ["payload", "vote"] voteStatusDecoder)
+        
+        SocketConnectionOnline ->
+            Json.Decode.succeed <| ApplicationIsOnline True
+
+        SocketConnectionOffline ->
+            Json.Decode.succeed <| ApplicationIsOnline False
 
         ResetAllVotesEvent ->
             Json.Decode.succeed ResetAllVotes
@@ -251,6 +268,10 @@ parseEventType eventType =
                 RemovePlayerEvent
             "updatePlayerVote" ->
                 UpdatePlayerVoteEvent
+            "connected" ->
+                SocketConnectionOnline
+            "disconnected" ->
+                SocketConnectionOffline
             _ ->
                 InvalidSocketEvent
 
