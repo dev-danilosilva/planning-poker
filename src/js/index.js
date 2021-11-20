@@ -13,6 +13,7 @@ const app =
                 entry_node : document.querySelector('#app'),
                 config : {
                     document_title : "Scrum Tools",
+                    nickname: "danilos.silva",
                     endpoints: {
                         api : "http://api.com/",
                         websocket : "ws:///websocket.com"
@@ -22,6 +23,8 @@ const app =
             });
 
 app.ports.log.subscribe((msg) => console.log(msg))
+
+app.ports.sendVote.subscribe(msg => console.log("New Vote => ", msg))
 
 setTimeout(() => {
     app.ports.getSocketMessage.send({ event : "addPlayer", payload : {nickname : "maria.joaquina"}})

@@ -14,10 +14,12 @@ import Json.Decode
 import Flags
 import Game
 import Json.Encode
+import Html.Events exposing (onClick)
 
 type alias Model =
     { documentTitle  : String
     , endpointsConfig : Flags.Endpoints
+    , me             : Game.Player
     , players        : List Game.Player
     , roomId         : String
     }
@@ -26,6 +28,7 @@ type Msg
     = AddPlayer String
     | RemovePlayer String
     | UpdatePlayerVote String Game.VoteStatus
+    | SendVote Game.VoteStatus
     | ResetAllVotes
     | GotSocketMessage Json.Decode.Value
     | InvalidSocketMessage Json.Decode.Value
@@ -40,6 +43,8 @@ type SocketEventType
 port getSocketMessage : (Json.Decode.Value -> msg) -> Sub msg
 
 port log : Json.Encode.Value -> Cmd msg
+
+port sendVote : Json.Encode.Value -> Cmd msg
 
 logString : String -> Cmd msg
 logString = log << Json.Encode.string
@@ -57,12 +62,16 @@ init : Json.Decode.Value -> (Model, Cmd Msg)
 init flagsValue = 
     case Json.Decode.decodeValue Flags.decode flagsValue of
         Ok flags ->
-            ( Model flags.documentTitle
-                    flags.endpoints
-                    []
-                    flags.roomId
-            , log flagsValue
-            )
+            let
+                player = Game.newPlayer flags.nickname
+            in
+                ( Model flags.documentTitle
+                        flags.endpoints
+                        player
+                        []
+                        flags.roomId
+                , logString <| "Me as " ++ player.nickname
+                )
         Err err ->
             let
                 error = err
@@ -70,10 +79,11 @@ init flagsValue =
                          |> Json.Encode.string
             in
             
-                ( Model (Flags.default |> .documentTitle)
-                        (Flags.default |> .endpoints)
+                ( Model (.documentTitle <| Flags.default)
+                        (.endpoints     <| Flags.default)
+                        (Game.newPlayer <| .nickname <| Flags.default)
                         []
-                        (Flags.default |> .roomId)
+                        (.roomId <| Flags.default)
                 , log error
                 )
 
@@ -87,12 +97,12 @@ update msg model =
         
         RemovePlayer nickname ->
             ( { model | players = Game.removePlayer (String.trim nickname) model.players}
-            , Cmd.none
+            , logString <| "DELETE -> " ++ nickname
             )
         
         UpdatePlayerVote nickname newVoteStatus ->
             ( { model | players = Game.updatePlayerVoteStatus nickname newVoteStatus model.players}
-            , Cmd.none
+            , logString <| "UPDATE -> " ++ nickname ++ " vote to " ++ Game.voteStatusToString newVoteStatus
             )
         
         GotSocketMessage json ->
@@ -105,6 +115,17 @@ update msg model =
                     in
                         (model, logString error)
         
+        SendVote voteStatus ->
+            let
+                me = model.me
+                newMe = { me | voteStatus = voteStatus }
+                newModel = { model | me = newMe }
+                encodedMessage = socketMessageEncoder voteUpdatePayloadEncoder newMe "updatePlayerVote"
+            in
+                ( newModel
+                , sendVote encodedMessage
+                )
+
         ResetAllVotes ->
             ( { model | players = Game.emptyVotes model.players }
             , Cmd.none
@@ -133,7 +154,7 @@ applicationBody model =
 
 stripe : Html Msg
 stripe =
-    div [class "stripe"]
+    div [class "stripe", onClick <| SendVote Game.BlankVote]
         []
 
 playerListView : List Game.Player -> Html Msg
@@ -237,3 +258,36 @@ cleanString : String -> String
 cleanString str = str
                     |> String.trim
                     |> String.toLower
+
+
+---- Encoders and Encoder Helpers
+
+socketMessageEncoder : (a -> Json.Encode.Value) -> a -> String -> Json.Encode.Value
+socketMessageEncoder payloadEncoder value eventName =
+    Json.Encode.object
+        [ ("event", Json.Encode.string eventName)
+        , ("payload", payloadEncoder value)]
+
+voteUpdatePayloadEncoder : Game.Player -> Json.Encode.Value
+voteUpdatePayloadEncoder player =
+    Json.Encode.object
+        [ ("nickname", Json.Encode.string player.nickname)
+        , ("vote", voteStatusEncoder player.voteStatus)
+        ]
+
+voteStatusEncoder : Game.VoteStatus -> Json.Encode.Value
+voteStatusEncoder voteStatus =
+    case voteStatus of
+        Game.EmptyVote ->
+            Json.Encode.null
+        Game.BlankVote ->
+            Json.Encode.string "blank"
+        Game.ValidVote vote ->
+            validVoteEncoder vote
+
+validVoteEncoder : Game.Vote -> Json.Encode.Value
+validVoteEncoder vote =
+    Json.Encode.object
+        [ ("representation", Json.Encode.string vote.representation)
+        , ("value", Json.Encode.float vote.value)
+        ]

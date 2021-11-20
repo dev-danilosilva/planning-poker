@@ -7,6 +7,7 @@ type alias Endpoints =
 type alias Flags =
     { documentTitle : String
     , endpoints : Endpoints
+    , nickname  : String
     , roomId    : String
     }
 
@@ -14,15 +15,17 @@ default : Flags
 default =
     { documentTitle = "Fallback Configuration - Planning Poker"
     , endpoints = { api = "api endpoint" }
+    , nickname = "defaul-nickname"
     , roomId = "Test Room"
     }
 
 decode : Json.Decode.Decoder Flags
 decode =
-    Json.Decode.map3
+    Json.Decode.map4
         Flags
         (Json.Decode.field "document_title" Json.Decode.string)
         (Json.Decode.field "endpoints" endpointsDecoder)
+        (Json.Decode.field "nickname"  Json.Decode.string)
         (Json.Decode.field "room_id"   Json.Decode.string)
 
 endpointsDecoder : Json.Decode.Decoder Endpoints
