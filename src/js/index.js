@@ -27,6 +27,10 @@ app.ports.log.subscribe((msg) => console.log(msg))
 app.ports.sendVote.subscribe(msg => console.log("New Vote => ", msg))
 
 setTimeout(() => {
+    app.ports.getSocketMessage.send({ event : "connected"})
+}, 3000);
+
+setTimeout(() => {
     app.ports.getSocketMessage.send({ event : "addPlayer", payload : {nickname : "maria.joaquina"}})
 }, 5000);
 
@@ -68,6 +72,10 @@ setTimeout(() => {
 setTimeout(() => {
     app.ports.getSocketMessage.send({ event : "removePlayer", payload : {nickname : "cirilo.joao"}})
 }, 18000);
+
+setTimeout(() => {
+    app.ports.getSocketMessage.send({ event : "disconnected" })
+}, 20000);
 
 // Event Contract
 // 

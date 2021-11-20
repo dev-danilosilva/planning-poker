@@ -14,7 +14,7 @@ import Json.Decode
 import Flags
 import Game
 import Json.Encode
-import Html.Events exposing (onClick)
+
 
 type alias Model =
     { documentTitle  : String
@@ -161,19 +161,25 @@ view model =
 applicationBody : Model -> Html Msg
 applicationBody model =
     div [class "main-view"]
-        [playerListView model.players]
+        [ div [class <| if model.online then "online-status" else "offline-status"]
+              [text <| if model.online then
+                            "Online"
+                        else
+                            "Offline"
+             ]
+        , div [] [ h3 [] [text "Players Online"]] 
+        , playerListView model.players
+        ]
 
 stripe : Html Msg
 stripe =
-    div [class "stripe", onClick <| SendVote Game.BlankVote]
+    div [class "stripe"]
         []
 
 playerListView : List Game.Player -> Html Msg
 playerListView players =
     div [class "player-list"]
-        <| List.append  [ div [] [ h3 [] [text "ONLINE"] ]
-                        ]
-                        (List.map playerView players)
+        (List.map playerView players)
 
 playerView : Game.Player -> Html Msg
 playerView player =

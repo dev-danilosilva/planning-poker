@@ -14,3 +14,13 @@
     padding: 10px;
     height: 90vh;
 }
+
+.online-status {
+    font-weight: 600;
+    color: green;
+}
+
+.offline-status {
+    font-weight: 600;
+    color: red;
+}
