@@ -1,5 +1,6 @@
 module Game exposing ( Player
                      , Vote
+                     , VoteScale
                      , VoteStatus(..)
                      , addNewPlayer
                      , defaultScale
@@ -89,6 +90,7 @@ defaultScale =
     , {value = 8.0,  representation = "8"}
     , {value = 13.0, representation = "13"}
     , {value = 21.0, representation = "21"}
+    , {value = 34.0, representation = "34"}
     ]
 
 -- createScale : List (Float, String) -> VoteScale

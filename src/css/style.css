@@ -1,28 +1,55 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins&display=swap');
+
 *{
+    font-family: 'Poppins', sans-serif;
     margin: 0;
 }
 
-.stripe {
+body {
     background-color: #8A2BE2;
+}
+
+.stripe {
+    background-color: #EDEDED;
     display: block;
     width: 100vw;
     height: 1vh;
 }
 
 .main-view {
-    /* background-color: #FF0000; */
-    padding: 10px;
-    height: 90vh;
+    padding: 0;
+    height: 99vh;
 }
 
-.online-status {
-    font-size: 30px;
-    font-weight: 600;
-    color: green;
+.planning-board {
+    height: 70%;
+    background-color: #8A2BE2;
 }
 
-.offline-status {
+.vote-options {
+    display: flex;
+    height: 30%;
+    background-color: #EDEDED;
+    justify-content: center;
+    align-items: center;
+}
+
+.vote-option {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-weight: 700;
+    width: 100px;
+    height: 100px;
+    margin: 0 10px;
     font-size: 30px;
-    font-weight: 600;
-    color: red;
+    background-color: #8A2BE2;
+    color: #EDEDED;
+    text-align: center;
+    cursor: pointer;
+    border-radius: 10px;
+}
+
+.vote-option:hover{
+    background-color: #581399;
 }

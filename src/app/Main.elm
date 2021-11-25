@@ -4,8 +4,7 @@ import Browser
 
 import Html exposing ( Html
                      , div
-                     , h3
-                     , p
+                     , span
                      , text
                      )
 import Html.Attributes exposing ( class
@@ -14,6 +13,7 @@ import Json.Decode
 import Flags
 import Game
 import Json.Encode
+import Html.Events exposing (onClick)
 
 
 type alias Model =
@@ -24,6 +24,7 @@ type alias Model =
     , roomId         : String
     , online         : Bool
     , voteVisibility : Bool
+    , currentScale   : Game.VoteScale
     }
 
 type Msg
@@ -79,6 +80,7 @@ init flagsValue =
                         flags.roomId
                         False
                         False
+                        Game.defaultScale
                 , logString <| "Me as " ++ player.nickname
                 )
         Err err ->
@@ -95,6 +97,7 @@ init flagsValue =
                         (.roomId <| Flags.default)
                         False
                         False
+                        Game.defaultScale
                 , log error
                 )
 
@@ -164,41 +167,31 @@ view : Model -> Browser.Document Msg
 view model =
     { title = model.documentTitle
     , body  = [ stripe
-              , applicationBody model
+              , applicationBodyView model
               ]
     }
 
-applicationBody : Model -> Html Msg
-applicationBody model =
+applicationBodyView : Model -> Html Msg
+applicationBodyView model =
     div [class "main-view"]
-        [ div [class <| if model.online then "online-status" else "offline-status"]
-              [text <| if model.online then
-                            "Online"
-                        else
-                            "Offline"
-             ]
-        , div [] [ h3 [] [text "Players Online"]] 
-        , playerListView model.players
+        [ div [class "planning-board"]
+              [div [] [text model.me.nickname]
+              ,div [] [text <| Game.voteStatusToString model.me.voteStatus]]
+        , div [class "vote-options"]
+              (List.map voteOptionView model.currentScale)
         ]
+
+voteOptionView : Game.Vote -> Html Msg
+voteOptionView vote =
+    span [ class "vote-option"
+         , onClick <| SendVote (Game.ValidVote vote)
+         ]
+         [ text vote.representation]
 
 stripe : Html Msg
 stripe =
     div [class "stripe"]
         []
-
-playerListView : List Game.Player -> Html Msg
-playerListView players =
-    div [class "player-list"]
-        (List.map playerView players)
-
-playerView : Game.Player -> Html Msg
-playerView player =
-    div [ class "player-view"]
-        [ p []
-            [ text player.nickname
-            , text <| "  ->  " ++ Game.voteStatusToString player.voteStatus
-            ]
-        ]
 
 -- Decoders and Decoder Helpers
 

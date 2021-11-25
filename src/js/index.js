@@ -12,7 +12,7 @@ const app =
     main({
             entry_node : document.querySelector('#app'),
             config : {
-                document_title : "Scrum Tools",
+                document_title : "Squad Tools",
                 nickname: "$nickname",
                 endpoints: {
                     api : "http://api.com/",
@@ -25,6 +25,18 @@ const app =
 app.ports.log.subscribe((msg) => console.log(msg))
 
 app.ports.sendVote.subscribe(msg => console.log("New Vote => ", msg))
+
+setTimeout(() => app.ports.getSocketMessage.send({event: "addPlayer", payload: {nickname : "danilo"}}), 2000)
+setTimeout(() => app.ports.getSocketMessage.send({event: "addPlayer", payload: {nickname : "mayara"}}), 4000)
+setTimeout(() => app.ports.getSocketMessage.send({event: "addPlayer", payload: {nickname : "lucas"}}), 5000)
+setTimeout(() => app.ports.getSocketMessage.send({event: "updatePlayerVote", payload: {nickname : "danilo", vote : {representation : "XS", value: 1.0}}}), 5000)
+setTimeout(() => app.ports.getSocketMessage.send({event: "addPlayer", payload: {nickname : "pedro"}}), 6000)
+setTimeout(() => app.ports.getSocketMessage.send({event: "updatePlayerVote", payload: {nickname : "mayara", vote: {representation : "S", value: 2.0}}}), 6000)
+setTimeout(() => app.ports.getSocketMessage.send({event: "addPlayer", payload: {nickname : "cassia"}}), 7000)
+setTimeout(() => app.ports.getSocketMessage.send({event: "updatePlayerVote", payload: {nickname : "pedro", vote: {representation : "XS", value: 1.0}}}), 7000)
+setTimeout(() => app.ports.getSocketMessage.send({event: "addPlayer", payload: {nickname : "luana"}}), 8000)
+setTimeout(() => app.ports.getSocketMessage.send({event: "updatePlayerVote", payload: {nickname : "luana", vote: {representation : "L", value: 4.0}}}), 11000)
+
 
 // Event Contract
 // 
